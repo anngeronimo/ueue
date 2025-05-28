@@ -8,7 +8,6 @@
 
 using namespace std;
 
-// Structure for a student node in BST
 struct StudentNode {
     long studentNumber;
     string fullName;
@@ -22,7 +21,6 @@ struct StudentNode {
         : studentNumber(sn), fullName(fn), ueEmail(ue), section(sc), grade(gr), left(nullptr), right(nullptr) {}
 };
 
-// Class for the Binary Search Tree managing students
 class AcademicBST {
 private:
     StudentNode* root;
@@ -67,20 +65,18 @@ private:
                 return temp;
             }
 
-            // Node with two children: Get the inorder successor (smallest in the right subtree)
+
             StudentNode* temp = node->right;
             while (temp && temp->left != nullptr) {
                 temp = temp->left;
             }
 
-            // Copy the inorder successor's content to this node
             node->studentNumber = temp->studentNumber;
             node->fullName = temp->fullName;
             node->ueEmail = temp->ueEmail;
             node->section = temp->section;
             node->grade = temp->grade;
 
-            // Delete the inorder successor
             node->right = deleteNode(node->right, temp->studentNumber);
         }
         return node;
@@ -147,7 +143,6 @@ public:
         return root;
     }
 
-    // Collect all students in the BST (inorder traversal)
     void collectAllStudents(StudentNode* node, vector<StudentNode*>& students) const {
         if (!node) return;
         collectAllStudents(node->left, students);
@@ -155,7 +150,6 @@ public:
         collectAllStudents(node->right, students);
     }
 
-    // Public method to get all students as a vector
     vector<StudentNode*> getAllStudents() const {
         vector<StudentNode*> students;
         collectAllStudents(root, students);
@@ -219,13 +213,12 @@ class StudentGraph {
 private:
     unordered_map<long, StudentNode*> studentTable;
 
-    // Merge two sorted sublists
     vector<StudentNode*> merge(const vector<StudentNode*>& left, const vector<StudentNode*>& right) {
         vector<StudentNode*> result;
         size_t i = 0, j = 0;
 
         while (i < left.size() && j < right.size()) {
-            if (left[i]->grade >= right[j]->grade) {  // Descending
+            if (left[i]->grade >= right[j]->grade) {  
                 result.push_back(left[i++]);
             } else {
                 result.push_back(right[j++]);
@@ -238,7 +231,6 @@ private:
         return result;
     }
 
-    // Recursive merge sort
     vector<StudentNode*> mergeSort(const vector<StudentNode*>& students) {
         if (students.size() <= 1)
             return students;
@@ -274,7 +266,6 @@ public:
             students.push_back(pair.second);
         }
 
-        // Use merge sort to sort students by grade descending
         vector<StudentNode*> sortedStudents = mergeSort(students);
 
         cout << left << setw(15) << "Student No"
@@ -323,7 +314,7 @@ public:
     }
 
     void displaySortedByGrade() {
-        displayAll(); // Already sorted by grade descending in displayAll
+        displayAll();
     }
 
     // --- Start of Changes ---
@@ -338,13 +329,11 @@ public:
             students.push_back(pair.second);
         }
 
-        // **Insertion Sort by section**
+       
         for (size_t i = 1; i < students.size(); ++i) {
             StudentNode* key = students[i];
             int j = i - 1;
 
-            // Move elements of students[0..i-1], that are greater than key->section,
-            // to one position ahead of their current position
             while (j >= 0 && students[j]->section > key->section) {
                 students[j + 1] = students[j];
                 --j;
@@ -367,7 +356,7 @@ public:
                  << setw(6) << s->grade << endl;
         }
     }
-    // --- End of Changes ---
+   
 };
 
 
@@ -377,7 +366,7 @@ void clearInputBuffer() {
 }
 
 void clearScreen() {
-    cout << "\x1B[2J\x1B[H";  // ANSI escape code to clear screen
+    cout << "\x1B[2J\x1B[H";  
 }
 
 void display() {
@@ -578,7 +567,7 @@ int main() {
                     getline(cin, fn);
                     student->fullName = fn;
                 }
-                // Update UE Email
+                
                 cout << "Current UE email: " << student->ueEmail << "\nUpdate? (y/n): ";
                 cin >> updateChoice;
                 if (updateChoice == 'y' || updateChoice == 'Y') {
@@ -588,7 +577,7 @@ int main() {
                     getline(cin, ue);
                     student->ueEmail = ue;
                 }
-                // Update Section
+                
                 cout << "Current section: " << student->section << "\nUpdate? (y/n): ";
                 cin >> updateChoice;
                 if (updateChoice == 'y' || updateChoice == 'Y') {
@@ -598,7 +587,7 @@ int main() {
                     getline(cin, sc);
                     student->section = sc;
                 }
-                // Update Grade
+                
                 cout << "Current grade: " << student->grade << "\nUpdate? (y/n): ";
                 cin >> updateChoice;
                 if (updateChoice == 'y' || updateChoice == 'Y') {
@@ -675,23 +664,23 @@ int main() {
             clearScreen();
             bst.showOverallPerformance();
         }
-        else if (choice == 9) { // New case for searching by name (Linear Search)
+        else if (choice == 9) { 
             clearScreen();
             cout << "Enter student's name: ";
             string searchName;
-            cin >> ws; // Consume any leftover newline character
+            cin >> ws;
             getline(cin, searchName);
 
-            // Convert search name to lowercase once
+            
             string searchNameLower = searchName;
             transform(searchNameLower.begin(), searchNameLower.end(), searchNameLower.begin(), ::tolower);
 
-            // Get all students from the BST into a linear vector
+            
             vector<StudentNode*> allStudents = bst.getAllStudents();
             vector<StudentNode*> foundStudents;
 
 
-            // Perform the linear search on the collected vector
+            
             for (const auto& student : allStudents) {
                 string currentNameLower = student->fullName;
                 transform(currentNameLower.begin(), currentNameLower.end(), currentNameLower.begin(), ::tolower);
@@ -718,26 +707,26 @@ int main() {
         }
         else if (choice == 10) {
             clearScreen();
-            graph = StudentGraph();  // reset graph
-            graph.buildFromBST(bst.getRoot());  // extract from BST
+            graph = StudentGraph();  
+            graph.buildFromBST(bst.getRoot());  
 
             int sortOption;
             cout << "Display all student records sorted by:\n";
             cout << "1. Alphabetically by name\n";
             cout << "2. By grade\n";
-            cout << "3. By section\n"; // Added option for sorting by section
+            cout << "3. By section\n"; 
             cout << "Enter choice: ";
             cin >> sortOption;
 
-            if (cin.fail() || (sortOption < 1 || sortOption > 3)) { // Updated validation
+            if (cin.fail() || (sortOption < 1 || sortOption > 3)) { 
                 cout << "Invalid choice. Displaying unsorted records.\n";
-                graph.displayAll(); // This actually sorts by grade descending, which might be confusing if the user expects "unsorted"
+                graph.displayAll(); 
             } else {
                 if (sortOption == 1) {
                     graph.displaySortedByName();
                 } else if (sortOption == 2) {
                     graph.displaySortedByGrade();
-                } else if (sortOption == 3) { // New case for sorting by section
+                } else if (sortOption == 3) { 
                     graph.displaySortedBySection();
                 }
             }
