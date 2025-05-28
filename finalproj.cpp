@@ -2,6 +2,9 @@
 #include <string>
 #include <vector>
 #include <limits>
+#include <unordered_map> 
+#include <iomanip>  
+#include <algorithm>
 
 using namespace std;
 
@@ -140,6 +143,25 @@ public:
         deleteTree(root);
     }
 
+    StudentNode* getRoot() const {
+        return root;
+    }
+
+    // Collect all students in the BST (inorder traversal)
+    void collectAllStudents(StudentNode* node, vector<StudentNode*>& students) const {
+        if (!node) return;
+        collectAllStudents(node->left, students);
+        students.push_back(node);
+        collectAllStudents(node->right, students);
+    }
+
+    // Public method to get all students as a vector
+    vector<StudentNode*> getAllStudents() const {
+        vector<StudentNode*> students;
+        collectAllStudents(root, students);
+        return students;
+    }
+
     void insert(long studentNumber, const string& fullName, const string& ueEmail, const string& section, float grade) {
         root = insert(root, studentNumber, fullName, ueEmail, section, grade);
     }
@@ -192,6 +214,119 @@ public:
         cout << "Students Failed: " << failedCount << endl;
     }
 };
+
+class StudentGraph {
+private:
+    unordered_map<long, StudentNode*> studentTable;
+
+    // Merge two sorted sublists
+    vector<StudentNode*> merge(const vector<StudentNode*>& left, const vector<StudentNode*>& right) {
+        vector<StudentNode*> result;
+        size_t i = 0, j = 0;
+
+        while (i < left.size() && j < right.size()) {
+            if (left[i]->grade >= right[j]->grade) {  // Descending
+                result.push_back(left[i++]);
+            } else {
+                result.push_back(right[j++]);
+            }
+        }
+
+        while (i < left.size()) result.push_back(left[i++]);
+        while (j < right.size()) result.push_back(right[j++]);
+
+        return result;
+    }
+
+    // Recursive merge sort
+    vector<StudentNode*> mergeSort(const vector<StudentNode*>& students) {
+        if (students.size() <= 1)
+            return students;
+
+        size_t mid = students.size() / 2;
+        vector<StudentNode*> left(students.begin(), students.begin() + mid);
+        vector<StudentNode*> right(students.begin() + mid, students.end());
+
+        return merge(mergeSort(left), mergeSort(right));
+    }
+
+public:
+    void addStudent(StudentNode* student) {
+        if (student)
+            studentTable[student->studentNumber] = student;
+    }
+
+    void buildFromBST(StudentNode* node) {
+        if (!node) return;
+        addStudent(node);
+        buildFromBST(node->left);
+        buildFromBST(node->right);
+    }
+
+    void displayAll() {
+        if (studentTable.empty()) {
+            cout << "No students to display.\n";
+            return;
+        }
+
+        vector<StudentNode*> students;
+        for (const auto& pair : studentTable) {
+            students.push_back(pair.second);
+        }
+
+        // Use merge sort to sort students by grade descending
+        vector<StudentNode*> sortedStudents = mergeSort(students);
+
+        cout << left << setw(15) << "Student No"
+             << setw(30) << "Full Name"
+             << setw(35) << "UE Email"
+             << setw(12) << "Section"
+             << setw(6) << "Grade" << endl;
+        cout << string(100, '-') << endl;
+
+        for (const auto& s : sortedStudents) {
+            cout << left << setw(15) << s->studentNumber
+                 << setw(30) << s->fullName
+                 << setw(35) << s->ueEmail
+                 << setw(12) << s->section
+                 << setw(6) << s->grade << endl;
+        }
+    }
+
+    void displaySortedByName() {
+        if (studentTable.empty()) {
+            cout << "No students to display.\n";
+            return;
+        }
+        vector<StudentNode*> students;
+        for (const auto& pair : studentTable) {
+            students.push_back(pair.second);
+        }
+        sort(students.begin(), students.end(), [](StudentNode* a, StudentNode* b) {
+            return a->fullName < b->fullName;
+        });
+
+        cout << left << setw(15) << "Student No"
+             << setw(30) << "Full Name"
+             << setw(35) << "UE Email"
+             << setw(12) << "Section"
+             << setw(6) << "Grade" << endl;
+        cout << string(100, '-') << endl;
+
+        for (const auto& s : students) {
+            cout << left << setw(15) << s->studentNumber
+                 << setw(30) << s->fullName
+                 << setw(35) << s->ueEmail
+                 << setw(12) << s->section
+                 << setw(6) << s->grade << endl;
+        }
+    }
+
+    void displaySortedByGrade() {
+        displayAll(); // Already sorted by grade descending in displayAll
+    }
+};
+
 
 void clearInputBuffer() {
     cin.clear();
@@ -281,9 +416,11 @@ int main() {
     bst.insert(20241120901, "John Roldan Garbin", "garbinjohnroldan@ue.edu.ph", "1CPE-2B", 83);
     bst.insert(20241139093, "Chantelle Venice Alejandrino", "alejandrino.chantellevenice@ue.edu.ph", "1CPE-2B", 89);
     bst.insert(20241100049, "Jhon Cristopher Bamo", "bamo.jhoncristopher@ue.edu.ph", "1CPE-2B", 84);
-    bst.insert(20221116137, "Jonel Laraquel", "laraquel.jonel@ue.edu.ph", "1CPE-2B", 84);  // Student ID missing
-    bst.insert(20221124523, "Karl Angelo Basconcillo", "basconcillo.karlangelo.@ue.edu.ph", "1CPE-2B", 82);
+    bst.insert(20221116137, "Jonel Laraquel", "laraquel.jonel@ue.edu.ph", "1CPE-2B", 84); 
+    bst.insert(20221124523, "Karl Angelo Basconcillo", "basconcillo.karlangelo@ue.edu.ph", "1CPE-2B", 82);
     bst.insert(20241110918, "Ivan Jhed Dumolong", "dumulong.ivanjhed@ue.edu.ph", "1CPE-2B", 67);
+
+    StudentGraph graph;
 
     while (true) {
         clearScreen();
@@ -297,7 +434,9 @@ int main() {
         cout << "6. Find student with lowest grade\n";
         cout << "7. List students who failed\n";
         cout << "8. Show overall performance\n";
-        cout << "9. Exit\n";
+        cout << "9. Enter student's name\n";
+        cout << "10.Display all student records\n";
+        cout << "11.Exit\n";
         cout << "Enter choice: ";
 
         int choice;
@@ -493,7 +632,72 @@ int main() {
             clearScreen();
             bst.showOverallPerformance();
         }
-        else if (choice == 9) {
+        else if (choice == 9) { // New case for searching by name (Linear Search)
+            clearScreen();
+            cout << "Enter student's name: ";
+            string searchName;
+            cin >> ws; // Consume any leftover newline character
+            getline(cin, searchName);
+
+            // Convert search name to lowercase once
+            string searchNameLower = searchName;
+            transform(searchNameLower.begin(), searchNameLower.end(), searchNameLower.begin(), ::tolower);
+
+            // Get all students from the BST into a linear vector
+            vector<StudentNode*> allStudents = bst.getAllStudents();
+            vector<StudentNode*> foundStudents;
+
+
+            // Perform the linear search on the collected vector
+            for (const auto& student : allStudents) {
+                string currentNameLower = student->fullName;
+                transform(currentNameLower.begin(), currentNameLower.end(), currentNameLower.begin(), ::tolower);
+
+                if (currentNameLower.find(searchNameLower) != string::npos) {
+                    foundStudents.push_back(student);
+                }
+            }
+
+            if (foundStudents.empty()) {
+                cout << "No students found matching '" << searchName << "'.\n";
+            } else {
+                cout << "Students matching '" << searchName << "':\n";
+                for (const auto& student : foundStudents) {
+                    cout << "----------------------------------------\n";
+                    cout << "Student Number: " << student->studentNumber << endl;
+                    cout << "Name: " << student->fullName << endl;
+                    cout << "UE Email: " << student->ueEmail << endl;
+                    cout << "Section: " << student->section << endl;
+                    cout << "Grade: " << student->grade << endl;
+                }
+                cout << "----------------------------------------\n";
+            }
+        }
+       else if (choice == 10) {
+    clearScreen();
+    graph = StudentGraph();  // reset graph
+    graph.buildFromBST(bst.getRoot());  // extract from BST
+
+    int sortOption;
+    cout << "Display all student records sorted by:\n";
+    cout << "1. Alphabetically by name\n";
+    cout << "2. By grade\n";
+    cout << "Enter choice: ";
+    cin >> sortOption;
+
+    if (cin.fail() || (sortOption != 1 && sortOption != 2)) {
+        cout << "Invalid choice. Displaying unsorted records.\n";
+        graph.displayAll();
+    } else {
+        if (sortOption == 1) {
+            graph.displaySortedByName();
+        } else if (sortOption == 2) {
+            graph.displaySortedByGrade();
+        }
+    }
+}
+
+        else if (choice == 11) {
             clearScreen();
             cout << "\n\n";
             cout << "\t\t\t\t████████ ██   ██  █████  ███    ██ ██   ██     ██    ██  ██████  ██    ██ ██\n";
@@ -505,6 +709,7 @@ int main() {
             cout << "\t\t\t\t                           Exiting Program.....                              \n";
             break;
         }
+
         else {
             cout << "Invalid choice. Please try again.\n";
         }
